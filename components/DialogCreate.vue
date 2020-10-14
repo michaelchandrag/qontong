@@ -63,67 +63,104 @@
                     </v-row>
                   </v-tab-item>
                   <v-tab-item :key="2" value="wallet">
-                      <v-card flat>
-                          <v-card-text>
-                            <v-row>
-                              <v-col cols="12">
-                                <v-text-field
-                                  v-model="wallet.name"
-                                  label="Nama Dompet"
-                                  required
-                                ></v-text-field>
-                              </v-col>
-                              <v-col cols="12">
-                                <v-text-field
-                                  v-model="wallet.description"
-                                  label="Deskripsi"
-                                  required
-                                ></v-text-field>
-                              </v-col>
-                              <v-col cols="12" class="red--text">
-                                <p v-if="walletErrors !== null">
-                                  {{walletErrors}}
-                                </p>
-                              </v-col>
-                            </v-row>
-
-                          </v-card-text>
-                          <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                              text
-                              @click="updateShow"
-                            >
-                              Close
-                            </v-btn>
-                            <v-btn
-                              class="success"
-                              @click="createWallet()"
-                            >
-                              <b>Save</b>
-                            </v-btn>
-                          </v-card-actions>
-                      </v-card>
+                    <v-card flat>
+                      <v-card-text>
+                        <v-row>
+                          <v-col cols="12">
+                            <v-text-field
+                              v-model="wallet.name"
+                              label="Nama Dompet"
+                              required
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12">
+                            <v-text-field
+                              v-model="wallet.description"
+                              label="Deskripsi"
+                              required
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12" class="red--text">
+                            <p v-if="walletErrors !== null">
+                              {{walletErrors}}
+                            </p>
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                          text
+                          @click="updateShow"
+                        >
+                          Close
+                        </v-btn>
+                        <v-btn
+                          class="success"
+                          @click="createWallet()"
+                        >
+                          <b>Save</b>
+                        </v-btn>
+                      </v-card-actions>
+                    </v-card>
                   </v-tab-item>
                   <v-tab-item :key="3" value="category">
-                      <v-card flat>
-                          <v-card-text>Kategori</v-card-text>
-                          <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                              text
-                              @click="updateShow"
+                    <v-card flat>
+                      <v-card-text>
+                        <v-row>
+                          <v-col cols="12">
+                            <v-text-field
+                              v-model="category.name"
+                              label="Nama Kategori"
+                              required
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12">
+                            <v-text-field
+                              v-model="category.description"
+                              label="Deskripsi"
+                              required
+                            ></v-text-field>
+                          </v-col>
+                          <v-col cols="12">
+                            <v-radio-group
+                              v-model="category.type"
                             >
-                              Close
-                            </v-btn>
-                            <v-btn
-                              class="success"
-                              @click="updateShow"
-                            >
-                              <b>Save</b>
-                            </v-btn>
-                          </v-card-actions>
-                      </v-card>
+                              <v-radio
+                                label="Dana Masuk"
+                                color="green"
+                                value="cash_in"
+                              />
+                              <v-radio
+                                label="Dana Keluar"
+                                color="red"
+                                value="cash_out"
+                              />
+                            </v-radio-group>
+                          </v-col>
+                          <v-col cols="12" class="red--text">
+                            <p v-if="categoryErrors !== null">
+                              {{categoryErrors}}
+                            </p>
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                          text
+                          @click="updateShow"
+                        >
+                          Close
+                        </v-btn>
+                        <v-btn
+                          class="success"
+                          @click="createCategory()"
+                        >
+                          <b>Save</b>
+                        </v-btn>
+                      </v-card-actions>
+                    </v-card>
                   </v-tab-item>
               </v-tabs-items>
             </v-row>
@@ -144,7 +181,13 @@ export default {
         name: "",
         description: ""
       },
-      walletErrors: ""
+      category: {
+        name: "",
+        description: "",
+        type: ""
+      },
+      walletErrors: null,
+      categoryErrors: null
     }
   },
   props: [
@@ -186,8 +229,37 @@ export default {
         })
       return false
     },
+    createCategory () {
+      this.resetError ()
+      if (!Robot.isAuthenticated()) {
+        this.updateShow()
+        this.$router.push('/login')
+        return false
+      }
+
+      var headers = {
+        'Authorization': 'Bearer ' + Robot.getAuthentication()
+      }
+      var payload = {
+        name: this.category.name,
+        description: this.category.description,
+        type: this.category.type
+      }
+
+      Robot.callPost('/api/v1/me/category', headers, payload)
+        .then(response => {
+          if (!response.success) {
+            this.categoryErrors = response.errors[0].detail
+            return false
+          }
+          this.updateShow(false)
+        })
+
+      return false
+    },
     resetError () {
       this.walletErrors = null
+      this.categoryErrors = null
     }
   }
 }
